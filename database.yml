@@ -1,0 +1,46 @@
+---
+- hosts: mysql
+  tasks:
+   - name: update apt-get
+     apt: update_cache=yes cache_valid_time=3600
+
+   - name: install mysql server
+     apt: name={{ item }} state=present
+     with_items:
+        -  mysql-server
+        -  python-mysqldb
+
+   - name: install git
+     apt: name=git state=installed
+
+   - name: clone git repo
+     git: repo='https://github.com/domantasalenskas/databaseVirtualiz.git'
+          dest=/src/github
+          accept_hostkey=yes
+
+   - name: create database
+     mysql_db: name=hospital state=present
+
+   - name: import data.sql to mysql
+     mysql_db:
+        state: import
+        name: hospital
+        target: /src/github/data.sql
+
+   - name: change bind address
+     lineinfile:
+       dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+       regexp: '^(.*)bind-address(.*)$'
+       line: 'bind-address                               = 0.0.0.0'
+       backrefs: yes
+       
+   - name:  grant rights to web
+     command: mysql -u root hospital -Ns -e "GRANT ALL ON *.* TO 'root'@'{{ item }}' IDENTIFIED BY 'root'"
+     with_items:
+      - "{{ groups['web'] }}"
+
+   - name: restart mariadb server
+     systemd:
+       state: restarted
+       name: mariadb.service
+       

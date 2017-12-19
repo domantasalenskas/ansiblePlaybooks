@@ -1,0 +1,54 @@
+---
+- hosts: web
+  tasks:
+    - name: Update the apt cache
+      apt: update_cache=yes cache_valid_time=3600
+
+    - name: install apache2
+      apt: name=apache2 state=installed
+
+    - name: delete var/www/html/index.html
+      file:
+        state: absent
+        path: "/var/www/html/index.html"
+
+    - name: get php
+      apt: name={{ item }} state=installed
+      with_items:
+      - php
+      - php-fpm
+      - php-mysql
+      - php-xml
+
+    - name: install git
+      apt: name=git state=installed
+
+    - name: clone git repo
+      git: repo='https://github.com/juoz357/Virtulization_hospital.git'
+          dest=/var/www/html
+          force=yes
+          accept_hostkey=yes
+
+    - name: change servername
+      lineinfile:
+       dest: /var/www/html/imports/connect.php
+       regexp: '^(.*)servername = "(.*)'
+       line: '$servername =  "{{ item }}";'
+       backrefs: yes
+      with_items:
+       - "{{ groups['mysql'] }}"
+
+       
+    - name: change username
+      lineinfile:
+       dest: /var/www/html/imports/connect.php
+       regexp: '^(.*)serverusername = "(.*)'
+       line: '$serverusername = "root";'
+       backrefs: yes
+
+    - name: change server password
+      lineinfile:
+       dest: /var/www/html/imports/connect.php
+       regexp: '^(.*)serverpassword = "(.*)'
+       line: '$serverpassword = "root";'
+       backrefs: yes
