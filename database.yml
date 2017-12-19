@@ -39,8 +39,7 @@
      with_items:
       - "{{ groups['web'] }}"
 
-   - name: restart mariadb server
-     systemd:
-       state: restarted
+   - service:
        name: mariadb.service
+       state: restarted
        
