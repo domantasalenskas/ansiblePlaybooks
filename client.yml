@@ -1,0 +1,6 @@
+- hosts: localhost
+  tasks:
+   - name: Creating user "{{ uusername }}" with admin access
+     user: 
+       name: "{{ username }}"
+       password: "{{ password | password_hash('sha512') }}"
