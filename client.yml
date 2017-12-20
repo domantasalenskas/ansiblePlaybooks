@@ -1,4 +1,4 @@
-- hosts: localhost
+- hosts: client
   tasks:
    - name: Creating user "{{ uusername }}" with admin access
      user: 
